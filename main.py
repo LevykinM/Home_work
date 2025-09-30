@@ -3,12 +3,17 @@ spb_price = 10_000
 ekb_price = 8_000
 
 dist = input("Введите пункт назначения (msc,spb,ekb): ")
-count = int(input("Введите количество людей: "))
+adults = int(input("Введите количество взрослых: "))
+kids = int(input("Введите количество детей: "))
 if dist == "msc":
-    price = msc_price * count
+    dist_price = msc_price
 elif dist == "spb":
-    price = spb_price * count
+    dist_price = spb_price
 else:
-    price = ekb_price * count
+    dist_price = ekb_price
 
-print("Цена поездки:", price)
+total = dist_price * (2 * adults + kids) //2
+
+#price = msc_price * (2 * adults + kids) //2
+
+print("Цена поездки:", total)
