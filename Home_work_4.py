@@ -15,5 +15,8 @@ while True:
     Girls.append(Girl_name)
     print("Женские имена:" + str(Girls))
 
+Boys.sort()
+Girls.sort()
+
 print("Мужские имена:" + str(Boys))
 print("Женские имена:" + str(Girls))
