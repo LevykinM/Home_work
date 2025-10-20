@@ -3,3 +3,5 @@ items = {
     'cheese':  {'name': 'сыр молочный 1 кг.', 'count': 12,  'price': 990.9},
     'sausage': {'name': 'колбаса 1 кг.',      'count': 122, 'price': 1990.9},
 }
+
+print(items)
