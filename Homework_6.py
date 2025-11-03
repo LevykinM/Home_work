@@ -23,3 +23,39 @@ def get_owner_by_number(number: str) -> str:
         if doc['number'] == number:
             return doc['name']
     return None
+
+def main():
+    """Главный цикл обработки команд."""
+    print("Программа секретаря. Команды:")
+    print("p – узнать владельца по номеру документа")
+    print("s – узнать полку хранения по номеру документа")
+    print("q – выйти из программы")
+
+    while True:
+        command = input("\nВведите команду: ").strip().lower()
+
+        if command == 'p':
+            number = input("Введите номер документа: ").strip()
+            owner = get_owner_by_number(number)
+            if owner:
+                print(f"Владелец документа: {owner}")
+            else:
+                print("Документ не найден.")
+
+        elif command == 's':
+            number = input("Введите номер документа: ").strip()
+            shelf = get_shelf_by_number(number)
+            if shelf:
+                print(f"Документ хранится на полке: {shelf}")
+            else:
+                print("Документ не найден на полках.")
+
+        elif command == 'q':
+            print("Выход из программы.")
+            break
+
+        else:
+            print("Неизвестная команда. Попробуйте снова.")
+
+if __name__ == '__main__':
+    main()
