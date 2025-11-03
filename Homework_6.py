@@ -16,3 +16,10 @@ def get_shelf_by_number(number: str) -> str:
         if number in docs:
             return shelf
     return None
+
+def get_shelf_by_number(number: str) -> str:
+    """Возвращает номер полки, на которой лежит документ."""
+    for shelf, docs in directories.items():
+        if number in docs:
+            return shelf
+    return None
