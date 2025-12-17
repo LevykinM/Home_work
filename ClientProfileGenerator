@@ -1,0 +1,86 @@
+def load_csv(file_path):
+    """Загружает данные из CSV-файла и возвращает список строк."""
+    data = []
+    with open(file_path, 'r', encoding='utf-8') as file:
+        # Пропуск первой строки с заголовками
+        next(file)
+        for line in file:
+            # Разделение значений по запятой
+            row = line.strip().split(',')
+            # Форматирование строки в словарь
+            attributes = {
+                'ФИО': row[0],
+                'Устройство': row[1],
+                'Браузер': row[2],
+                'Пол': row[3],
+                'Возраст': row[4],
+                'Сумма чека': row[5],
+                'Регион': row[6]
+            }
+            data.append(attributes)
+    return data
+
+
+def format_description(attributes):
+    """Формирует текстовое описание по шаблону."""
+    description = (
+        f"Пользователь {attributes['ФИО']} "
+        f"{get_gender(attributes['Пол'])} пола, "
+        f"{attributes['Возраст']} лет "
+        f"совершил{'а' if attributes['Пол'] == 'female' else ''} покупку на {attributes['Сумма чека']} у.е. "
+        f"с {get_device(attributes['Устройство'])} браузера {attributes['Браузер']}. "
+        f"Регион, из которого совершалась покупка: {attributes['Регион']}."
+    )
+    return description
+
+
+def get_gender(gender):
+    """Возвращает строковое представление пола."""
+    if gender == 'female':
+        return 'женского'
+    elif gender == 'male':
+        return 'мужского'
+    else:
+        return 'неопределённого'
+
+
+def get_device(device):
+    """Возвращает строковое представление устройства."""
+    if device == 'mobile':
+        return 'мобильного'
+    elif device == 'desktop':
+        return 'десктопного'
+    elif device == 'laptop':
+        return 'ноутбука'
+    elif device == 'tablet':
+        return 'планшета'
+    else:
+        return device
+
+
+def save_to_txt(descriptions, output_file):
+    """Записывает описания в TXT-файл."""
+    with open(output_file, 'w', encoding='utf-8') as file:
+        for description in descriptions:
+            file.write(description + '\n')
+
+
+def main():
+    input_file = r'C:\Users\micha\PycharmProjects\Home_Work\web_clients_correct.csv'
+    output_file = 'output.txt'
+    try:
+        # Загрузка данных
+        rows = load_csv(input_file)
+        # Форматирование описаний
+        descriptions = [format_description(row) for row in rows]
+        # Сохранение результата
+        save_to_txt(descriptions, output_file)
+        print(f"Данные успешно сохранены в файл {output_file}")
+    except FileNotFoundError:
+        print(f"Ошибка: файл {input_file} не найден!")
+    except Exception as e:
+        print(f"Произошла ошибка: {str(e)}")
+
+
+if __name__ == "__main__":
+    main()
