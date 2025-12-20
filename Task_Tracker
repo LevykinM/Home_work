@@ -1,0 +1,157 @@
+import json
+import os
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from urllib.parse import urlparse
+
+
+# Файл для хранения задач
+TASKS_FILE = "tasks.txt"
+tasks = []
+next_id = 1
+
+
+def load_tasks():
+    """
+    Загружает список задач из файла при запуске сервера.
+    Если файла нет или он пуст — начинаем с пустого списка.
+    """
+    global tasks, next_id
+    if os.path.exists(TASKS_FILE):
+        try:
+            with open(TASKS_FILE, "r", encoding="utf-8") as file:
+                tasks = json.load(file)
+                # Находим следующий свободный ID
+                if tasks:
+                    next_id = max(task["id"] for task in tasks) + 1
+                else:
+                    next_id = 1
+        except (json.JSONDecodeError, IOError):
+            tasks = []
+            next_id = 1
+    else:
+        tasks = []
+
+
+def save_tasks():
+    """
+    Сохраняет текущий список задач в файл.
+    """
+    with open(TASKS_FILE, "w", encoding="utf-8") as file:
+        json.dump(tasks, file, ensure_ascii=False, indent=4)
+
+
+class TaskHandler(BaseHTTPRequestHandler):
+    """
+    Обработчик HTTP-запросов для управления задачами.
+    """
+
+    def do_GET(self):
+        """
+        Обработка GET-запросов.
+        Поддерживается только маршрут /tasks для получения всех задач.
+        """
+        if self.path == "/tasks":
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(tasks).encode("utf-8"))
+        else:
+            self.send_error(404)
+
+    def do_POST(self):
+        """
+        Обработка POST-запросов:
+        - /tasks — создание новой задачи
+        - /tasks/{id}/complete — отметка задачи как выполненной
+        """
+        parsed_path = urlparse(self.path)
+
+        # Создание новой задачи: POST /tasks
+        if parsed_path.path == "/tasks":
+            try:
+                content_length = int(self.headers.get("Content-Length", 0))
+                if content_length == 0:
+                    self.send_error(400)
+                    return
+
+                raw_data = self.rfile.read(content_length)
+                data = json.loads(raw_data)
+
+                title = data.get("title")
+                priority = data.get("priority")
+
+                # Валидация обязательных полей
+                if not title or not priority:
+                    self.send_error(400)
+                    return
+
+                if priority not in ["low", "normal", "high"]:
+                    self.send_error(400)
+                    return
+
+                # Создание задачи
+                global next_id
+                new_task = {
+                    "id": next_id,
+                    "title": title,
+                    "priority": priority,
+                    "isDone": False
+                }
+                next_id += 1
+                tasks.append(new_task)
+                save_tasks()  # Сохраняем после изменения
+
+                self.send_response(200)
+                self.send_header("Content-type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps(new_task).encode("utf-8"))
+
+            except json.JSONDecodeError:
+                self.send_error(400)
+            except Exception:
+                self.send_error(500)
+
+        # Отметка задачи как выполненной: POST /tasks/{id}/complete
+        elif self.path.startswith("/tasks/") and self.path.endswith("/complete"):
+            try:
+                # Извлекаем id из пути
+                parts = self.path.strip("/").split("/")
+                if len(parts) != 3 or parts[2] != "complete":
+                    self.send_error(404)
+                    return
+
+                task_id = int(parts[1])
+            except (ValueError, IndexError):
+                self.send_error(400)
+                return
+
+            # Поиск задачи по ID
+            task = next((t for t in tasks if t["id"] == task_id), None)
+            if not task:
+                self.send_error(404)
+                return
+
+            # Отмечаем как выполненную
+            task["isDone"] = True
+            save_tasks()  # Сохраняем изменения
+
+            self.send_response(200)
+            self.end_headers()
+
+        else:
+            self.send_error(404, "Not found")
+
+
+def run_server():
+    """
+    Запуск HTTP-сервера на порту 8000.
+    """
+    load_tasks()
+    server_address = ("", 8000)
+    httpd = HTTPServer(server_address, TaskHandler)
+    print("Сервер запущен на http://localhost:8000")
+    httpd.serve_forever()
+
+
+if __name__ == "__main__":
+    run_server()
